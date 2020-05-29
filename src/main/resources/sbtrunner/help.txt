@@ -1,0 +1,60 @@
+# Adapted from https://github.com/paulp/sbt-extras/blob/e252487b9bfdea6a6c520a13a13bb780dc9394fe/sbt#L351-L413
+# Lines starting with a '#' with no whitespace before are not printed
+Usage: sbt [options]
+Note that options which are passed along to sbt begin with -- whereas
+options to this runner use a single dash. Any sbt command can be scheduled
+to run first by prefixing the command with --, so --warn, --error and so on
+are not special.
+  -h | -help         print this message
+#  -v                 verbose operation (this runner is chattier)
+  -d, -w, -q         aliases for --debug, --warn, --error (q means quiet)
+#  -x                 debug this script
+  -trace <level>     display stack traces with a max of <level> frames (default: -1, traces suppressed)
+  -debug-inc         enable debugging log for the incremental compiler
+  -no-colors         disable ANSI color codes
+#  -sbt-create        start sbt even if current directory contains no sbt project
+  -sbt-dir   <path>  path to global settings/plugins directory (default: ~/.sbt/<version>)
+  -sbt-boot  <path>  path to shared boot directory (default: ~/.sbt/boot in 0.11+)
+  -ivy       <path>  path to local Ivy repository (default: ~/.ivy2)
+  -no-share          use all local caches; no sharing
+  -offline           put sbt in offline mode
+#  -jvm-debug <port>  Turn on JVM debugging, open at the given port.
+#  -batch             Disable interactive mode
+  -prompt <expr>     Set the sbt prompt; in expr, 's' is the State and 'e' is Extracted
+  -script <file>     Run the specified file as a scala script
+#  # sbt version (default: sbt.version from $buildProps if present, otherwise $sbt_release_version)
+#  -sbt-version <version>  use the specified version of sbt (default: $sbt_release_version)
+#  -sbt-force-latest       force the use of the latest release of sbt: $sbt_release_version
+#  -sbt-dev                use the latest pre-release version of sbt: $sbt_unreleased_version
+#  -sbt-jar      <path>    use the specified jar as the sbt launcher
+#  -sbt-launch-dir <path>  directory to hold sbt launchers (default: $sbt_launch_dir)
+#  -sbt-launch-repo <url>  repo url for downloading sbt launcher jar (default: $(url_base "$sbt_version"))
+  # scala version (default: as chosen by sbt)
+  -28                        use $latest_28
+  -29                        use $latest_29
+  -210                       use $latest_210
+  -211                       use $latest_211
+  -212                       use $latest_212
+  -213                       use $latest_213
+  -scala-home <path>         use the scala build at the specified directory
+  -scala-version <version>   use the specified version of scala
+  -binary-version <version>  use the specified scala version when searching for dependencies
+#  # java version (default: java from PATH, currently $(java -version 2>&1 | grep version))
+#  -java-home <path>          alternate JAVA_HOME
+  # passing options to the jvm
+# - note it does NOT use JAVA_OPTS due to pollution
+#  # The default set is used if JVM_OPTS is unset and no -jvm-opts file is found
+#  <default>         $(default_jvm_opts)
+  JAVA_OPTS         environment variable holding either the jvm args directly
+#, or
+#                    the reference to a file containing jvm args if given path is prepended by '@' (e.g. '@/etc/jvmopts')
+#                    Note: "@"-file is overridden by local '.jvmopts' or '-jvm-opts' argument.
+#  -jvm-opts <path>  file containing jvm args (if not given, .jvmopts in project root is used if present)
+  -Dkey=val         pass -Dkey=val directly to the jvm
+  -J-X              pass option -X directly to the jvm (-J is stripped)
+#  # passing options to sbt, OR to this runner
+#  SBT_OPTS          environment variable holding either the sbt args directly, or
+#                    the reference to a file containing sbt args if given path is prepended by '@' (e.g. '@/etc/sbtopts')
+#                    Note: "@"-file is overridden by local '.sbtopts' or '-sbt-opts' argument.
+  -sbt-opts <path>  file containing sbt args (if not given, .sbtopts in project root is used if present)
+  -S-X              add -X to sbt's scalacOptions (-S is stripped)
