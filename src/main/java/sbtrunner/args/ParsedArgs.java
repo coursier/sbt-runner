@@ -9,14 +9,16 @@ public class ParsedArgs {
 
     private final String[] args;
     private final List<Map.Entry<String, String>> properties;
+    private final boolean newOrCreate;
 
-    ParsedArgs(String[] args, List<Map.Entry<String, String>> properties) {
+    ParsedArgs(String[] args, List<Map.Entry<String, String>> properties, boolean newOrCreate) {
         this.args = args;
         this.properties = properties;
+        this.newOrCreate = newOrCreate;
     }
 
-    public static ParsedArgs of(String[] args, List<Map.Entry<String, String>> properties) {
-        return new ParsedArgs(args, properties);
+    public static ParsedArgs of(String[] args, List<Map.Entry<String, String>> properties, boolean newOrCreate) {
+        return new ParsedArgs(args, properties, newOrCreate);
     }
 
 
@@ -56,6 +58,7 @@ public class ParsedArgs {
         ArrayList<Map.Entry<String, String>> properties = new ArrayList<>();
         File optFile = null;
         ArrayList<String> scalacArgs = new ArrayList<>();
+        boolean newOrCreate = false;
 
         // trying to emulate the parser from https://github.com/paulp/sbt-extras/blob/e252487b9bfdea6a6c520a13a13bb780dc9394fe/sbt#L430-L478
         while (input.hasNext()) {
@@ -85,9 +88,20 @@ public class ParsedArgs {
             } else if (arg.equals("-trace")) {
                 String traceLevel = nextArgument(input, "integer", "-trace");
                 remainingArgs.add("set traceLevel in ThisBuild := \"" + traceLevel + "\"");
+            } else if (arg.equals("-traces") || arg.equals("--traces")) {
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.traces", "true"));
+            } else if (arg.equals("-timings") || arg.equals("--timings")) {
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.task.timings", "true"));
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.task.timings.on.shutdown", "true"));
             } else if (arg.equals("-debug-inc")) {
                 properties.add(new AbstractMap.SimpleEntry<>("xsbt.inc.debug", "true"));
-            } else if (arg.equals("-no-colors")) {
+            } else if (arg.startsWith("-colors=")) {
+                String value = arg.substring("-colors=".length());
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.color", value));
+            } else if (arg.startsWith("--colors=")) {
+                String value = arg.substring("--colors=".length());
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.color", value));
+            } else if (arg.equals("-no-colors") || arg.equals("--no-colors")) {
                 properties.add(new AbstractMap.SimpleEntry<>("sbt.log.noformat", "true"));
             } else if (arg.equals("-sbt-dir")) {
                 properties.add(new AbstractMap.SimpleEntry<>("sbt.global.base", nextArgument(input, "path", "-sbt-dir")));
@@ -99,6 +113,8 @@ public class ParsedArgs {
                 properties.add(new AbstractMap.SimpleEntry<>("sbt.global.base", "project/.sbtboot"));
                 properties.add(new AbstractMap.SimpleEntry<>("sbt.boot.directory", "project/.boot"));
                 properties.add(new AbstractMap.SimpleEntry<>("sbt.ivy.home", "project/.ivy"));
+            } else if (arg.equals("-no-global")) {
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.global.base", "project/.sbtboot"));
             } else if (arg.equals("-offline")) {
                 remainingArgs.add("set offline in Global := true");
             } else if (arg.equals("-prompt")) {
@@ -136,6 +152,17 @@ public class ParsedArgs {
             } else if (arg.startsWith("-S")) {
                 String scalacArg = arg.substring(2);
                 scalacArgs.add(scalacArg);
+            } else if (arg.startsWith("-supershell=")) {
+                String value = arg.substring("-supershell=".length());
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.supershell", value));
+            } else if (arg.startsWith("--supershell=")) {
+                String value = arg.substring("--supershell=".length());
+                properties.add(new AbstractMap.SimpleEntry<>("sbt.supershell", value));
+            } else if (arg.equals("-sbt-create")) {
+                newOrCreate = true;
+            } else if (arg.equals("new")) {
+                remainingArgs.add(arg);
+                newOrCreate = true;
             } else {
                 remainingArgs.add(arg);
             }
@@ -161,7 +188,7 @@ public class ParsedArgs {
             remainingArgs.addAll(fromFile);
         }
 
-        return ParsedArgs.of(remainingArgs.toArray(new String[0]), properties);
+        return ParsedArgs.of(remainingArgs.toArray(new String[0]), properties, newOrCreate);
     }
 
 
@@ -181,6 +208,10 @@ public class ParsedArgs {
             map.put(entry.getKey(), entry.getValue());
         }
         return map;
+    }
+
+    public boolean isNewOrCreate() {
+        return newOrCreate;
     }
 
     public void setSystemProperties() {
