@@ -7,6 +7,7 @@ import sbtrunner.args.ParsingArgumentsException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class SbtRunner {
@@ -25,6 +26,31 @@ public class SbtRunner {
             }
         } catch (ParsingArgumentsException | IOException ex) {
             throw new RuntimeException(ex);
+        }
+
+        if (!parsedArgs.isNewOrCreate() &&
+                !new File("build.sbt").isFile() &&
+                !new File("project").isDirectory()) {
+            System.err.println(
+                    "[warn] Neither build.sbt nor a 'project' directory in the current directory: " +
+                            Paths.get(".").toAbsolutePath().normalize());
+
+            Console console = System.console();
+
+            if (console != null) {
+                while (true) {
+                    System.err.println("c) continue");
+                    System.err.println("q) quit");
+                    System.err.print("? ");
+
+                    String input = console.readLine();
+                    if (input.equals("c") || input.equals("C")) {
+                        break;
+                    } else if (input.equals("q") || input.equals("Q")) {
+                        System.exit(1);
+                    }
+                }
+            }
         }
 
         parsedArgs.setSystemProperties();
